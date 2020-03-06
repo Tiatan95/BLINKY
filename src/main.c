@@ -22,16 +22,85 @@ int main(void)
   BSP_LED_Off(LED2);
   /* Infinite loop */
   uint32_t PrevTicks = HAL_GetTick();
+
+  enum {S,O,R}state;
+  enum {Space,Dash,Dot} mstate;
+  state = S;
+  mstate = Space;
+  int count = 0;
+  int scount = 0;
+  int tick_comparison;
   while (1)
   {
 	uint32_t CurrentTicks = HAL_GetTick();
+	switch(state)
+	{
+		case S:
+			if((CurrentTicks-PrevTicks) >= 1000 && count <= 5)
+			{
+				PrevTicks = CurrentTicks;
+				BSP_LED_Toggle(LED2);
+				count++;
+				if(count > 5)
+				{
+					state = O;
+					count = 0;
+					scount++;
+					if(scount >= 2)
+					{
+						state = R;
+					}
+				}
+			}
+			break;
+		case O:
+			if(mstate == Dash)
+			{
+				tick_comparison = 3000;
+			}
+			if(mstate == Space)
+			{
+				tick_comparison = 1000;
+			}
+			if((CurrentTicks-PrevTicks) >= tick_comparison && count <=5)
+			{
+				PrevTicks = CurrentTicks;
+				BSP_LED_Toggle(LED2);
+				count++;
+				if(count > 5)
+				{
+					state = S;
+					count = 0;
+				}
+				if(mstate == Dash)
+				{
+					mstate = Space;
+				}
+				else if(mstate == Space)
+				{
+					mstate = Dash;
+				}
+			}
+			break;
+		case R:
+			if((CurrentTicks-PrevTicks) >= 4000)
+			{
+				state = S;
+				scount = 0;
+				mstate = Space;
+				count = 0;
+			}
+	}
+	/*
 	if ((CurrentTicks-PrevTicks)>=1000)
 	{
 		PrevTicks = CurrentTicks;
 		BSP_LED_Toggle(LED2);
 	}
+	*/
   }
 }
+
 /**
   * @brief  System Clock Configuration
   *         The system Clock is configured as follow :
